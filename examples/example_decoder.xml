@@ -1,0 +1,16 @@
+<!--
+  Esempio di decoder per un'applicazione che scrive su syslog.
+
+  Log di prova:
+  Nov 19 10:00:00 server01 myapp: login failed user=mario ip=10.0.0.5
+-->
+
+<decoder name="myapp">
+  <program_name>^myapp</program_name>
+</decoder>
+
+<decoder name="myapp-login">
+  <parent>myapp</parent>
+  <regex>^login (\w+) user=(\S+) ip=(\S+)</regex>
+  <order>result, dstuser, srcip</order>
+</decoder>
