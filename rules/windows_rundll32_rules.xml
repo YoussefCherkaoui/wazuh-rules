@@ -1,5 +1,6 @@
 <!--
   Windows - rundll32 opening a URL, with an exception for NetBird
+  ID block: 100900-100999
 
   100974  rundll32 url.dll,FileProtocolHandler opening an http(s) URL
           (Windows Security event 4688 - process creation). Technique
@@ -35,3 +36,4 @@
   </rule>
 
 </group>
+
