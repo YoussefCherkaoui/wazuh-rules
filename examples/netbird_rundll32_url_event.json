@@ -1,0 +1,22 @@
+{
+  "win": {
+    "system": {
+      "eventID": "4688"
+    },
+    "eventdata": {
+      "subjectUserName": "user",
+      "subjectDomainName": "EXAMPLE",
+      "subjectUserSid": "S-1-5-21-1111111111-2222222222-3333333333-1001",
+      "subjectLogonId": "0x1a2b3c",
+      "targetUserSid": "S-1-0-0",
+      "targetLogonId": "0x0",
+      "parentProcessName": "C:\\\\Program Files\\\\Netbird\\\\netbird-ui.exe",
+      "newProcessName": "C:\\\\Windows\\\\System32\\\\rundll32.exe",
+      "commandLine": "rundll32 url.dll,FileProtocolHandler https://netbird.example.com/oauth2/auth?audience=netbird-cli&client_id=netbird-cli&prompt=login&redirect_uri=http%3A%2F%2Flocalhost%3A53000%2F",
+      "processId": "0x3710",
+      "newProcessId": "0x4244",
+      "tokenElevationType": "%%1938",
+      "mandatoryLabel": "S-1-16-8192"
+    }
+  }
+}
