@@ -9,6 +9,9 @@
   100979  Exception: the parent process is the NetBird client
           (netbird-ui.exe), which opens its login/update page in the
           browser this way. Known false positive, lowered to level 3.
+          The full install path is anchored (C:\Program Files\NetBird\):
+          matching only the file name would let any netbird-ui.exe
+          dropped in a user-writable folder (e.g. %TEMP%) hide the alert.
 
   Requirements:
   - Windows "Audit Process Creation" enabled
@@ -31,7 +34,7 @@
 
   <rule id="100979" level="3">
     <if_sid>100974</if_sid>
-    <field name="win.eventdata.parentProcessName" type="pcre2">(?i)\\+Netbird\\+netbird-ui\.exe$</field>
+    <field name="win.eventdata.parentProcessName" type="pcre2">(?i)^C:\\+Program Files\\+NetBird\\+netbird-ui\.exe$</field>
     <description>NetBird: login/update page opened in the browser (known false positive)</description>
   </rule>
 

@@ -13,6 +13,7 @@ Ogni regola qui dentro nasce da un caso reale: un log da interpretare, un attacc
 | `lists/` | Liste CDB (IP, utenti, hash) | `/var/ossec/etc/lists/` |
 | `active-response/` | Script e configurazioni di risposta attiva | `/var/ossec/active-response/bin/` |
 | `examples/` | Esempi commentati con log di prova, da copiare come punto di partenza | — |
+| `tests/` | Casi di prova: evento, regola e risultato atteso | — |
 | `scripts/` | Controlli automatici sul ruleset | — |
 
 ## Convenzioni
@@ -50,21 +51,31 @@ Incolla il log di prova: `wazuh-logtest` mostra il decoder usato, i campi estrat
 python3 scripts/check_ruleset.py
 ```
 
-Lo script verifica che ogni file XML sia ben formato, che gli ID siano unici e che stiano nell'intervallo giusto. Gira anche su GitHub Actions a ogni push e pull request.
+Lo script verifica che ogni file XML sia ben formato, che gli ID siano unici e che stiano nell'intervallo giusto.
+
+```bash
+python3 scripts/test_rules.py
+```
+
+Prova le condizioni `<field>` di ogni regola sugli eventi descritti in `tests/*.json`, compresi i casi che **non** devono scattare (per esempio un'eccezione aggirata). Controlla le regex della singola regola, non la catena di `if_sid`: la prova definitiva resta `wazuh-logtest` sul manager.
+
+Entrambi gli script girano su GitHub Actions a ogni push e pull request.
 
 ## Regole disponibili
 
 | File | Blocco ID | Regola | Livello | Descrizione | MITRE |
 |---|---|---|---|---|---|
 | `rules/windows_rundll32_rules.xml` | 100900–100999 | 100974 | 12 | `rundll32 url.dll,FileProtocolHandler` apre un URL http(s) (evento Windows 4688) | T1218.011 |
-| `rules/windows_rundll32_rules.xml` | 100900–100999 | 100979 | 3 | Eccezione: il processo padre è il client NetBird (`netbird-ui.exe`), falso positivo noto | — |
+| `rules/windows_rundll32_rules.xml` | 100900–100999 | 100979 | 3 | Eccezione: il processo padre è il client NetBird installato in `C:\Program Files\NetBird\`, falso positivo noto | — |
 
 ### Windows: rundll32 che apre un URL (eccezione NetBird)
 
 `rundll32` che apre un URL è una tecnica nota di esecuzione tramite un binario fidato di Windows, quindi la regola 100974 resta a livello 12. Il client NetBird usa lo stesso meccanismo per aprire la pagina di login nel browser: la regola 100979 abbassa solo quel caso preciso, controllando il processo padre, invece di abbassare la regola per tutti.
 
+L'eccezione controlla il **percorso completo** di installazione, non solo il nome del file: altrimenti un `netbird-ui.exe` qualsiasi copiato in una cartella scrivibile dall'utente (per esempio `%TEMP%\Netbird\`) basterebbe a nascondere l'alert. Se NetBird è installato in un'altra cartella, adatta il percorso nella regola 100979.
+
 **Requisiti:** audit della creazione dei processi su Windows (evento 4688) con la riga di comando inclusa negli eventi.
 
 **Evento di prova (anonimizzato):** `examples/netbird_rundll32_url_event.json`
 
-
+**Casi di test:** `tests/windows_rundll32.json` (NetBird vero, NetBird finto in `%TEMP%`, rundll32 lanciato da un altro processo, rundll32 senza URL).

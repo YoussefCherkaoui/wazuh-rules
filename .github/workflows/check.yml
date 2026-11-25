@@ -11,3 +11,5 @@ jobs:
       - uses: actions/checkout@v4
       - name: Controlla XML e ID delle regole
         run: python3 scripts/check_ruleset.py
+      - name: Prova le regole sugli eventi di test
+        run: python3 scripts/test_rules.py
