@@ -51,3 +51,20 @@ python3 scripts/check_ruleset.py
 ```
 
 Lo script verifica che ogni file XML sia ben formato, che gli ID siano unici e che stiano nell'intervallo giusto. Gira anche su GitHub Actions a ogni push e pull request.
+
+## Regole disponibili
+
+| File | Blocco ID | Regola | Livello | Descrizione | MITRE |
+|---|---|---|---|---|---|
+| `rules/windows_rundll32_rules.xml` | 100900–100999 | 100974 | 12 | `rundll32 url.dll,FileProtocolHandler` apre un URL http(s) (evento Windows 4688) | T1218.011 |
+| `rules/windows_rundll32_rules.xml` | 100900–100999 | 100979 | 3 | Eccezione: il processo padre è il client NetBird (`netbird-ui.exe`), falso positivo noto | — |
+
+### Windows: rundll32 che apre un URL (eccezione NetBird)
+
+`rundll32` che apre un URL è una tecnica nota di esecuzione tramite un binario fidato di Windows, quindi la regola 100974 resta a livello 12. Il client NetBird usa lo stesso meccanismo per aprire la pagina di login nel browser: la regola 100979 abbassa solo quel caso preciso, controllando il processo padre, invece di abbassare la regola per tutti.
+
+**Requisiti:** audit della creazione dei processi su Windows (evento 4688) con la riga di comando inclusa negli eventi.
+
+**Evento di prova (anonimizzato):** `examples/netbird_rundll32_url_event.json`
+
+
