@@ -66,16 +66,25 @@ Entrambi gli script girano su GitHub Actions a ogni push e pull request.
 | File | Blocco ID | Regola | Livello | Descrizione | MITRE |
 |---|---|---|---|---|---|
 | `rules/windows_rundll32_rules.xml` | 100900–100999 | 100974 | 12 | `rundll32 url.dll,FileProtocolHandler` apre un URL http(s) (evento Windows 4688) | T1218.011 |
-| `rules/windows_rundll32_rules.xml` | 100900–100999 | 100979 | 3 | Eccezione: il processo padre è il client NetBird installato in `C:\Program Files\NetBird\`, falso positivo noto | — |
+| `rules/windows_rundll32_rules.xml` | 100900–100999 | 100979 | 3 | Eccezione: `netbird-ui.exe` in `C:\Program Files\NetBird\` apre la pagina di aggiornamento `https://pkgs.netbird.io/windows/` | — |
 
 ### Windows: rundll32 che apre un URL (eccezione NetBird)
 
-`rundll32` che apre un URL è una tecnica nota di esecuzione tramite un binario fidato di Windows, quindi la regola 100974 resta a livello 12. Il client NetBird usa lo stesso meccanismo per aprire la pagina di login nel browser: la regola 100979 abbassa solo quel caso preciso, controllando il processo padre, invece di abbassare la regola per tutti.
+Spiegata anche in questo post su LinkedIn: [Un falso positivo non si risolve abbassando la regola](https://www.linkedin.com/feed/update/urn:li:activity:7531272622827872256/).
 
-L'eccezione controlla il **percorso completo** di installazione, non solo il nome del file: altrimenti un `netbird-ui.exe` qualsiasi copiato in una cartella scrivibile dall'utente (per esempio `%TEMP%\Netbird\`) basterebbe a nascondere l'alert. Se NetBird è installato in un'altra cartella, adatta il percorso nella regola 100979.
+`rundll32` che apre un URL è una tecnica usata anche dagli attaccanti per eseguire contenuti tramite un binario fidato di Windows, quindi la regola 100974 resta a livello 12. Il client NetBird usa lo stesso meccanismo per aprire la sua pagina di aggiornamento nel browser.
+
+Invece di disattivare o abbassare la regola, la 100979 la porta a livello 3 solo quando **entrambe** le condizioni sono vere:
+
+- il processo padre è `netbird-ui.exe` nel suo **percorso completo** di installazione: un `netbird-ui.exe` qualsiasi copiato in una cartella scrivibile dall'utente (per esempio `%TEMP%\Netbird\`) non basta;
+- la riga di comando apre **esattamente** `https://pkgs.netbird.io/windows/`, con l'espressione ancorata all'inizio (`^`): un URL che contiene il dominio solo nel percorso non passa.
+
+Lo stesso comando lanciato da qualsiasi altro processo, o verso qualsiasi altro indirizzo, resta un alert di livello 12. Anche la pagina di login di NetBird resta un alert: se vuoi escluderla, aggiungi una regola figlia con l'indirizzo del tuo server NetBird.
+
+Se NetBird è installato in un'altra cartella, adatta il percorso nella regola 100979.
 
 **Requisiti:** audit della creazione dei processi su Windows (evento 4688) con la riga di comando inclusa negli eventi.
 
-**Evento di prova (anonimizzato):** `examples/netbird_rundll32_url_event.json`
+**Eventi di prova (anonimizzati):** `examples/netbird_rundll32_update_event.json` (aggiornamento, da cui nasce l'eccezione) e `examples/netbird_rundll32_url_event.json` (login).
 
-**Casi di test:** `tests/windows_rundll32.json` (NetBird vero, NetBird finto in `%TEMP%`, rundll32 lanciato da un altro processo, rundll32 senza URL).
+**Casi di test:** `tests/windows_rundll32.json`: aggiornamento NetBird, login NetBird, `netbird-ui.exe` finto in `%TEMP%`, stesso comando da un altro processo, dominio NetBird nascosto nel percorso di un altro sito, rundll32 senza URL.

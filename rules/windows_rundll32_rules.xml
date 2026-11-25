@@ -6,12 +6,18 @@
           (Windows Security event 4688 - process creation). Technique
           often abused to launch content through a trusted Windows binary.
 
-  100979  Exception: the parent process is the NetBird client
-          (netbird-ui.exe), which opens its login/update page in the
-          browser this way. Known false positive, lowered to level 3.
-          The full install path is anchored (C:\Program Files\NetBird\):
-          matching only the file name would let any netbird-ui.exe
-          dropped in a user-writable folder (e.g. %TEMP%) hide the alert.
+  100979  Exception: the NetBird client opens its update page in the
+          browser this way. Known false positive, lowered to level 3
+          only when BOTH conditions are true:
+          - the parent is C:\Program Files\NetBird\netbird-ui.exe
+            (full path anchored: matching only the file name would let a
+            netbird-ui.exe dropped in %TEMP% hide the alert);
+          - the command line opens exactly https://pkgs.netbird.io/windows/
+            (anchored with ^, so a URL that only contains the domain in
+            its path does not slip through).
+          Same command from any other process, or to any other address,
+          stays a level 12 alert.
+          Added: 2026-11-25. Source event: examples/netbird_rundll32_update_event.json
 
   Requirements:
   - Windows "Audit Process Creation" enabled
@@ -35,7 +41,8 @@
   <rule id="100979" level="3">
     <if_sid>100974</if_sid>
     <field name="win.eventdata.parentProcessName" type="pcre2">(?i)^C:\\+Program Files\\+NetBird\\+netbird-ui\.exe$</field>
-    <description>NetBird: login/update page opened in the browser (known false positive)</description>
+    <field name="win.eventdata.commandLine" type="pcre2">(?i)^rundll32(\.exe)?\s+url\.dll,FileProtocolHandler\s+https://pkgs\.netbird\.io/windows/</field>
+    <description>NetBird: update page opened in the browser (known false positive)</description>
   </rule>
 
 </group>
