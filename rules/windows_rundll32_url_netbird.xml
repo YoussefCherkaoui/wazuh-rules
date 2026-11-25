@@ -1,0 +1,37 @@
+<!--
+  Windows - rundll32 opening a URL, with an exception for NetBird
+
+  100974  rundll32 url.dll,FileProtocolHandler opening an http(s) URL
+          (Windows Security event 4688 - process creation). Technique
+          often abused to launch content through a trusted Windows binary.
+
+  100979  Exception: the parent process is the NetBird client
+          (netbird-ui.exe), which opens its login/update page in the
+          browser this way. Known false positive, lowered to level 3.
+
+  Requirements:
+  - Windows "Audit Process Creation" enabled
+  - "Include command line in process creation events" enabled
+    (otherwise win.eventdata.commandLine is empty and 100974 never fires)
+-->
+
+<group name="windows,custom,rundll32,">
+
+  <rule id="100974" level="12">
+    <decoded_as>windows_eventchannel</decoded_as>
+    <field name="win.system.eventID">^4688$</field>
+    <field name="win.eventdata.newProcessName" type="pcre2">(?i)\\rundll32\.exe$</field>
+    <field name="win.eventdata.commandLine" type="pcre2">(?i)url\.dll\s*,\s*FileProtocolHandler\s+https?://</field>
+    <description>rundll32 url.dll,FileProtocolHandler opened a URL (possible proxy execution)</description>
+    <mitre>
+      <id>T1218.011</id>
+    </mitre>
+  </rule>
+
+  <rule id="100979" level="3">
+    <if_sid>100974</if_sid>
+    <field name="win.eventdata.parentProcessName" type="pcre2">(?i)\\+Netbird\\+netbird-ui\.exe$</field>
+    <description>NetBird: login/update page opened in the browser (known false positive)</description>
+  </rule>
+
+</group>
